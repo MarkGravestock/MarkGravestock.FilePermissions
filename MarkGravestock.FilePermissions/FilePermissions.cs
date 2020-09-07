@@ -6,23 +6,36 @@ namespace MarkGravestock.FilePermissions
 {
     public class FilePermissions
     {
+        private const int PermissionGroupLength = 3;
+
         public int ConvertToOctal(string permission)
         {
             if (permission.Length != 9)
             {
-                throw new ArgumentOutOfRangeException(nameof(permission), "permission is not correct length");               
+                throw new ArgumentOutOfRangeException(nameof(permission), "permission is not correct length");
             }
-            
+
             int total = 0;
 
-            total = 100 * ConvertPermissionGroupToOctal(permission.Substring(0, 3));
-            total = total + 10 * ConvertPermissionGroupToOctal(permission.Substring(3, 3));
-            return total + ConvertPermissionGroupToOctal(permission.Substring(6, 3));
+            var permissionGroups = SplitGroups(permission, PermissionGroupLength).Reverse().ToList();
+
+            for (int i = 0; i < permissionGroups.Count(); i++)
+            {
+                total = total + ConvertPermissionGroupToOctalDigit(permissionGroups[i]) * ((int) Math.Pow(10, i));
+            }
+
+            return total;
         }
 
-        private static int ConvertPermissionGroupToOctal(string permission)
+        private IEnumerable<string> SplitGroups(string str, int len)
         {
-            var individualPermissions = permission.ToCharArray();
+            return Enumerable.Range(0, str.Length / len).Select(x => str.Substring(x * len, len));
+        }
+    
+
+        private static int ConvertPermissionGroupToOctalDigit(string permissionGroup)
+        {
+            var individualPermissions = permissionGroup.ToCharArray();
 
             return individualPermissions.Aggregate(0, (accumulator, perm) => accumulator + ConvertPermissionToOctal(perm));
         }
